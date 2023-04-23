@@ -3,7 +3,7 @@ services:
     app:
         build: .
         volumes:
-            - .:/home/project
+            - ../:/home/project
             #- <network-drive-location>:/home/volume
         ports:
             - 8080:8080

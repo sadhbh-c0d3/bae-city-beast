@@ -21,11 +21,11 @@ Edit `.Dockerfile` comment and uncomment following lines:
 ```
 # These will make docker container automatically build the solution
 ADD "./build-and-run.sh" "/home/docker/"
-CMD ["build-and-run.sh"] 
+CMD ["./build-and-run.sh"] 
 
 # and if these are used instead of the other two above, we can manually build
 #ADD "./run-forever.sh" "/home/docker/"
-#CMD ["run-forever.sh"]
+#CMD ["./run-forever.sh"]
 ```
 
 Use Docker Compose:
@@ -47,11 +47,11 @@ Edit `.Dockerfile` comment and uncomment following lines:
 ```
 # These will make docker container automatically build the solution
 #ADD "./build-and-run.sh" "/home/docker/"
-#CMD ["build-and-run.sh"]
+#CMD ["./build-and-run.sh"]
 
 # and if these are used instead of the other two above, we can manually build
 ADD "./run-forever.sh" "/home/docker/"
-CMD ["run-forever.sh"]
+CMD ["./run-forever.sh"]
 ```
 
 Launch Docker container
@@ -68,7 +68,7 @@ Configure
 ```
     mkdir /home/build
     cd /home/build
-    cmake /home/app
+    cmake /home/project
 ```
 
 Build
