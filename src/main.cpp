@@ -84,8 +84,10 @@ int main(int argc, const char **argv)
 #ifdef HAS_CERT
     MySecurity security;
     bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
+    
     MyServer server{document_root};
     bae::city::beast::Service<MyServer> service{server};
+    
     return service(config);
 #endif
 }
