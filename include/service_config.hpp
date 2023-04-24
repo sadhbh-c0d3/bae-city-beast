@@ -20,21 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#undef NDEBUG
-#include <cassert>
+#ifndef INCLUDED_BAE_CITY_BEAST_SERVICE_CONFIG_HPP
+#define INCLUDED_BAE_CITY_BEAST_SERVICE_CONFIG_HPP
 
-#include "service_config.hpp"
+#include <boost/asio/ip/address.hpp>
 #include <string>
-#include <boost/lexical_cast.hpp>
 
 
-int main(int argc, const char** argv)
-{
-    bae::city::beast::ServiceConfig config{"0.0.0.0", 8080, 1};
+namespace bae::city::beast {
 
-    assert(boost::lexical_cast<std::string>(config.address()) == "0.0.0.0");
-    assert(config.port() == 8080);
-    assert(config.thread_count() == 1);
+    struct ServiceConfig
+    {
+        using Address = boost::asio::ip::address;
+        using Port = unsigned short;
 
-    return 0;
-}
+        ServiceConfig(const std::string &address, Port port, int thread_count)
+            : m_address(boost::asio::ip::make_address(address)), m_port(port), m_thread_count(thread_count)
+        {}
+
+        ServiceConfig(Address address, Port port, int thread_count)
+            : m_address(std::move(address)), m_port(port), m_thread_count(thread_count)
+        {}
+
+    const Address &address() const { return m_address; }
+    const Port &port() const { return m_port; }
+    const int thread_count() const { return m_thread_count; }
+
+    private:
+        const Address m_address;
+        const Port m_port;
+        const int m_thread_count;
+    };
+
+} //namespace bae::city::beast
+#endif//INCLUDED_BAE_CITY_BEAST_SERVICE_CONFIG_HPP

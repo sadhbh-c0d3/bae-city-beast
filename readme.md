@@ -8,16 +8,16 @@
 
 Microservice framework in C++20 built on top og *Boost.Beast*
 
+The *Boost.Beast* comes with [example](https://www.boost.org/doc/libs/1_80_0/libs/beast/example/http/server/coro-ssl/http_server_coro_ssl.cpp). 
+
+In this project I have organised code into classes, so that user can easily create microservice on top of *Boost.Beast*.
+
 
 ## Building automatic
 
 Create Docker container and build project within that container.
-Start in *docker* directory:
-```
-cd ./docker
-```
 
-Edit `.Dockerfile` comment and uncomment following lines:
+Edit `./docker/.Dockerfile` comment and uncomment following lines:
 ```
 # These will make docker container automatically build the solution
 ADD "./build-and-run.sh" "/home/docker/"
@@ -37,13 +37,9 @@ It will build whole new container, and then it will build the sources, and run t
 
 ## Building manually
 
-Create Docker container and build project within that container.
-Start in *docker* directory:
-```
-cd ./docker
-```
+Create Docker container and enter that container.
 
-Edit `.Dockerfile` comment and uncomment following lines:
+Edit `./docker/.Dockerfile` comment and uncomment following lines:
 ```
 # These will make docker container automatically build the solution
 #ADD "./build-and-run.sh" "/home/docker/"
@@ -61,7 +57,7 @@ Launch Docker container
 
 Enter development environment within Docker container
 ```
-    ./enter-app.sh
+    ./docker/enter-app.sh
 ```
 
 Configure
@@ -83,5 +79,15 @@ Test
 
 Run
 ```
-    ./bin/run_app 0.0.0.0 8080 /home/bae-city-beast 1
+    ./bin/run_app 0.0.0.0 8080 /home/volume 1
+```
+
+Test GET Request
+```
+   ./test-request.sh some-path
+```
+
+Test POST Request
+```
+   ./test-request.sh some-path -X POST -T some-file
 ```
