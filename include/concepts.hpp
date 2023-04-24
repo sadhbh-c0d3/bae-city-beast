@@ -4,6 +4,7 @@
 #include <concepts>
 #include <type_traits>
 #include <string>
+#include <string_view>
 
 
 namespace bae::city::beast {
@@ -30,21 +31,22 @@ namespace bae::city::beast {
     template<typename T>
     concept RequestConcept = 
         requires(T x) {
-            typename std::remove_cvref_t<T>::ResponseExample;
-            { x.BadRequest() };
-            { x.NotFound() };
-            { x.ServerError() };
-            { x.StatusCode() };
-            { x.TextResponse() };
-            { x.FileResponse() };
-            { x.Send(std::declval<std::remove_cvref_t<T>::ResponseExample>()) };
+            { x.Send(x.BadRequest(std::declval<std::string>())) };
+            { x.Send(x.NotFound(std::declval<std::string>())) };
+            { x.Send(x.ServerError(std::declval<std::string>())) };
+            { x.Send(x.Success()) };
+            { x.Send(x.TextResponse(std::declval<std::string>())) };
+            { x.Send(x.FileResponse(
+                std::declval<typename std::remove_cvref_t<T>::FileBody>(),
+                std::declval<std::string>())) };
+            { x.request() } -> std::convertible_to<typename std::remove_cvref_t<T>::RequestType>;
         };
     
-    template<typename T>
-    concept ServerConcept = true;
-    //    requires(T x) {
-    //        { x(std::declval<_Request>()) };
-    //    };
+    template<typename T, typename R>
+    concept ServerConcept =
+        requires(T x) {
+            { x(std::declval<R>()) };
+        };
 
 
 } //namespace bae::city::beast

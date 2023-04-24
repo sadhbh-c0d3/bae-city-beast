@@ -92,9 +92,30 @@ struct MyServer
     template <bae::city::beast::RequestConcept _Request>
     void operator()(_Request &&request)
     {
-        // handle the request
-        //auto res = std::move(request.BadRequest());
-        //request.Send(res);
+        namespace http = boost::beast::http;
+    
+        if (request->method() == http::verb::get)
+        {
+            return request.Send(request.TextResponse("Hello!"));
+        }
+        else if (request->method() == http::verb::post)
+        {
+            std::cout << "Body size: " << request->body().size() << std::endl;
+
+            for (auto buf : request->body().cdata())
+            {
+                std::cout << "Chunk size: " << buf.size() << std::endl;
+            }
+            
+            return request.Send(request.Success());
+        }
+
+        if (request["Custom"] == "pass")
+        {
+            return request.Send(request.TextResponse("Passed"));
+        }
+            
+        return request.Send(request.BadRequest("Invalid request"));
     }
 
 private:
