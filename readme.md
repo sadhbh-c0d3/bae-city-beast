@@ -6,7 +6,7 @@
 
 ## About
 
-Microservice framework in C++20 built on top og *Boost.Beast*
+Microservice framework in C++20 built on top of *Boost.Beast*
 
 The *Boost.Beast* comes with [example](https://www.boost.org/doc/libs/1_80_0/libs/beast/example/http/server/coro-ssl/http_server_coro_ssl.cpp). 
 
