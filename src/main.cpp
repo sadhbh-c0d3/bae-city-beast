@@ -1,9 +1,17 @@
 #include "service.hpp"
 #include "secure_config.hpp"
 
-#include <iostream>
+//!SSL certificate loader
+#ifdef __has_include
+# if __has_include("main.i")
+#   include "main.i"
+#define HAS_CERT
+# endif
+#else
+#   error There is no SSL certificate file!
+#endif
 
-#include "main.i" //< SSL certificate loader
+#include <iostream>
 
 struct MyServer
 {
@@ -73,11 +81,11 @@ int main(int argc, const char **argv)
     auto const document_root = argv[3];
     auto const thread_count = std::max<int>(1, std::atoi(argv[4]));
 
+#ifdef HAS_CERT
     MySecurity security;
     bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
-    
     MyServer server{document_root};
     bae::city::beast::Service<MyServer> service{server};
-
     return service(config);
+#endif
 }
