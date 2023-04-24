@@ -10,13 +10,25 @@ struct MyServer
     MyServer(std::string document_root)
         : m_document_root(std::move(document_root)) {}
 
+    bool authenticate_user(const std::string &authorization)
+    {
+        // admin:password123
+        return (authorization == "Basic YWRtaW46cGFzc3dvcmQxMjM=");
+    }
+
     template <bae::city::beast::RequestConcept _Request>
     void operator()(_Request &&request)
     {
         namespace http = boost::beast::http;
 
         std::cout << request->method() << " " << request->target() << std::endl;
+        std::cout << "Authorization: " << request[http::field::authorization] << std::endl;
     
+        if (!authenticate_user(std::string(request[http::field::authorization])))
+        {
+            return request.send(request.bad_request("Unauthorized"));
+        }
+
         if (request->method() == http::verb::get)
         {
             return request.send(request.text_response("Hello!"));
