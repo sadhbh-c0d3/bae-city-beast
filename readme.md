@@ -113,5 +113,12 @@ Test GET Request
 
 Test POST Request
 ```
-   ./test-request.sh some-path -X POST -T some-file
+   ./test-request
+```
+
+## See also
+[Other projects using Boost.Beast](https://github.com/boostorg/beast/wiki/Companies-and-Individuals-Using-Beast)
+
+
+sh some-path -X POST -T some-file
 ```
