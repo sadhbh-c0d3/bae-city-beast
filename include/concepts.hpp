@@ -47,12 +47,17 @@ namespace bae::city::beast {
     concept ServiceConfigConcept =
         requires(T x) {
             typename std::remove_cvref_t<T>::Context;
+            // configure (SSL) context
             { x.configure(std::declval<typename std::remove_cvref_t<T>::Context&>())};
         };
 
     template<typename T>
     concept RequestConcept = 
         requires(T x) {
+            // should define type aliases
+            typename std::remove_cvref_t<T>::RequestType;
+            typename std::remove_cvref_t<T>::BufferType;
+            // should be able to send(*) response produced by *
             { x.send(x.bad_request(std::declval<std::string>())) };
             { x.send(x.not_found(std::declval<std::string>())) };
             { x.send(x.server_error(std::declval<std::string>())) };
@@ -61,12 +66,21 @@ namespace bae::city::beast {
             { x.send(x.file_response(
                 std::declval<typename std::remove_cvref_t<T>::FileBody>(),
                 std::declval<std::string>())) };
+            // should provide access to underlying boost::beast::http::request<>
             { x.request() } -> std::convertible_to<typename std::remove_cvref_t<T>::RequestType>;
+            // ...we also require that underlying request type has method() and target()
+            { x->method() } -> auto;
+            { (*x).target() } -> auto;
+            // and shorthand for underlying operator []
+            { x[std::declval<std::string>()] } -> auto;
         };
     
     template<typename T, typename R>
     concept ServerConcept =
         requires(T x) {
+            // should define type alias
+            RequestConcept<R>;
+            // and should provide operator (R) for request type R
             { x(std::declval<R>()) };
         };
 

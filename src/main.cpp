@@ -24,8 +24,7 @@ struct MyServer
         return (authorization == "Basic YWRtaW46cGFzc3dvcmQxMjM=");
     }
 
-    template <bae::city::beast::RequestConcept _Request>
-    void operator()(_Request &&request)
+    void operator()(bae::city::beast::RequestConcept auto &&request)
     {
         namespace http = boost::beast::http;
 
@@ -72,7 +71,7 @@ int main(int argc, const char **argv)
         std::cerr <<
             "Usage: run_app <address> <port> <doc_root> <threads>\n" <<
             "Example:\n" <<
-            "    run_app 0.0.0.0 8080 . 1\n";
+            "    run_app 0.0.0.0 8080 /home/volume/ 1\n";
         return EXIT_FAILURE;
     }
 
@@ -86,7 +85,8 @@ int main(int argc, const char **argv)
     bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
     
     MyServer server{document_root};
-    bae::city::beast::Service<MyServer> service{server};
+    bae::city::beast::Service<
+        bae::city::beast::DynamicRequest, MyServer> service{server};
     
     return service(config);
 #endif

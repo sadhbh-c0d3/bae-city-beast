@@ -40,14 +40,11 @@
 
 namespace bae::city::beast {
 
-    template <
-        ServerConcept<
-            Request<
-                boost::beast::http::request<boost::beast::http::dynamic_body>>>
-            _Server>
+    template <RequestConcept _Request, ServerConcept<_Request> _Server>
     struct Service
     {
         using Server = _Server;
+        using RequestType = _Request;
 
         Service(Server &server): m_server(server) {}
 
@@ -151,16 +148,14 @@ namespace bae::city::beast {
             if(ec)
                 return fail(ec, "handshake");
         
-            boost::beast::multi_buffer buffer;
+            typename RequestType::BufferType buffer;
 
-            typedef boost::beast::http::request<boost::beast::http::dynamic_body> RequestType;
-        
             for(;;)
             {
                 // Set the timeout.
                 boost::beast::get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
         
-                boost::beast::http::request<boost::beast::http::dynamic_body> req;
+                typename RequestType::RequestType req;
         
                 // Read a request
                 boost::beast::http::async_read(stream, buffer, req, yield[ec]);
@@ -170,7 +165,7 @@ namespace bae::city::beast {
                     return fail(ec, "read");
                 
                 // Send the response
-                Request<RequestType> request{std::move(req), stream, close, ec, yield};
+                RequestType request{std::move(req), stream, close, ec, yield};
                 m_server(request);
 
                 if(ec)

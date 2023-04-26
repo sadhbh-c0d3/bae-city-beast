@@ -40,10 +40,31 @@
 
 namespace bae::city::beast {
 
+    template<typename> struct BufferTypeTrait
+    {};
+
+    template <>
+    struct BufferTypeTrait <
+        boost::beast::http::request<
+            boost::beast::http::string_body>>
+    {
+        using BufferType = boost::beast::flat_buffer;
+    };
+
+    template <>
+    struct BufferTypeTrait <
+        boost::beast::http::request<
+            boost::beast::http::dynamic_body>>
+    {
+        using BufferType = boost::beast::multi_buffer;
+    };
+
     template <typename _RequestType>
     struct Request
     {
         using RequestType = _RequestType;
+        using BufferType = typename BufferTypeTrait<RequestType>::BufferType;
+
         template<typename T>
         using Response = boost::beast::http::response<T>;
         using FileBody = boost::beast::http::file_body;
@@ -182,6 +203,15 @@ namespace bae::city::beast {
         boost::beast::error_code &m_ec;
         boost::asio::yield_context m_yield;
     };
+
+
+    using StringRequest = Request<
+        boost::beast::http::request<
+            boost::beast::http::string_body>>;
+
+    using DynamicRequest = Request<
+        boost::beast::http::request<
+            boost::beast::http::dynamic_body>>;
 
 } //namespace bae::city::beast
 #endif//INCLUDED_BAE_CITY_BEAST_REQUEST_HPP
