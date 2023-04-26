@@ -12,6 +12,27 @@ The *Boost.Beast* comes with [example](https://www.boost.org/doc/libs/1_80_0/lib
 
 In this project I have organised code into classes, so that user can easily create microservice on top of *Boost.Beast*.
 
+### Usage
+
+User needs to define two classes:
+
+- `SslCertificateLoaderConcept MySecurity`
+- `ServerConcept MyServer`
+
+and then HTTPS service can be started in following way:
+```
+    MySecurity security;
+    bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
+    
+    MyServer server{document_root};
+    bae::city::beast::Service<MyServer> service{server};
+```
+
+### No Smart Pointers
+
+Note that all objects in the example above are created on stack. No need to user smart pointers.
+
+Also, **note** that use of smart pointers would defeat the idea of static (compile-time) polymorphism.
 
 ## Building automatic
 
