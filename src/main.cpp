@@ -64,6 +64,30 @@ private:
     std::string m_document_root;
 };
 
+struct MyLogger
+{
+    void info(auto &&...text)
+    {
+        format(std::cout, std::forward<decltype(text)>(text)...);
+    }
+
+    void error(auto &&...text)
+    {
+        format(std::cerr, std::forward<decltype(text)>(text)...);
+    }
+
+private:
+    std::ostream &format(std::ostream &os, auto && text1)
+    {
+        return os << text1 << std::endl;
+    }
+
+    std::ostream &format(std::ostream &os, auto && text1, auto &&...text)
+    {
+        return format(os << text1, std::forward<decltype(text)>(text)...);
+    }
+};
+
 int main(int argc, const char **argv)
 {
     if (argc != 5)
@@ -84,9 +108,10 @@ int main(int argc, const char **argv)
     auto security = MySecurity{};
     auto config = bae::city::beast::SecureConfig<MySecurity>{security, address, port, thread_count};
 
+    auto logger = MyLogger{};
     auto server = MyServer{document_root};
     auto service = bae::city::beast::Service<
-        bae::city::beast::DynamicRequest, MyServer>{server};
+        MyLogger, bae::city::beast::DynamicRequests, MyServer>{logger, server};
     
     return service(config);
 #endif

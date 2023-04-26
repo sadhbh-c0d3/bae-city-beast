@@ -14,22 +14,30 @@ In this project I have organised code into classes, so that user can easily crea
 
 ### Usage
 
-User needs to define two classes:
+User needs to define three classes:
 
-- `SslCertificateLoaderConcept MySecurity`
-- `ServerConcept MyServer`
+- `SslCertificateLoaderConcept MySecurity` - should load SSL certificate
+- `LoggerConcept MyLogger` - should write logging messages
+- `ServerConcept MyServer` - should handle requests
 
 and then HTTPS service can be started in following way:
 ```
     auto security = MySecurity{};
     auto config = bae::city::beast::SecureConfig<MySecurity>{security, address, port, thread_count};
 
+    auto logger = MyLogger{};
     auto server = MyServer{document_root};
     auto service = bae::city::beast::Service<
-        bae::city::beast::DynamicRequest, MyServer>{server};
+        MyLogger, bae::city::beast::DynamicRequests, MyServer>{logger, server};
     
     return service(config);
 ```
+
+See [main.cpp](https://github.com/sadhbh-c0d3/bae-city-beast/blob/main/src/main.cpp) for implementation examples.
+
+### No Router
+
+This is ultra-simple HTTPS microservice, barely a wrapper around Boost.Beast, and it does not provide complex routing.
 
 ### No Smart Pointers
 

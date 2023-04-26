@@ -51,159 +51,167 @@ namespace bae::city::beast {
     };
 
     template <typename _RequestType>
-    struct Request
+    struct RequestFactory
     {
-        using RequestType = _RequestType;
-        using BufferType = typename BufferTypeTrait<RequestType>::BufferType;
-
-        template<typename T>
-        using Response = boost::beast::http::response<T>;
-        using FileBody = boost::beast::http::file_body;
-
-        Response<boost::beast::http::string_body> bad_request(std::string why)
+        template<LoggerConcept _LoggerType>
+        struct Request
         {
-            namespace http = boost::beast::http;
+            using LoggerType = _LoggerType;
+            using RequestType = _RequestType;
+            using BufferType = typename BufferTypeTrait<RequestType>::BufferType;
 
-            std::cerr << why << std::endl;
+            template<typename T>
+            using Response = boost::beast::http::response<T>;
+            using FileBody = boost::beast::http::file_body;
 
-            http::response<http::string_body> res{http::status::bad_request, m_request.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(m_request.keep_alive());
-            res.body() = std::move(why);
-            res.prepare_payload();
+            Response<boost::beast::http::string_body> bad_request(std::string why)
+            {
+                namespace http = boost::beast::http;
 
-            return std::move(res);
-        }
+                m_logger.error(why);
 
-        Response<boost::beast::http::string_body> not_found(std::string target)
-        {
-            namespace http = boost::beast::http;
+                http::response<http::string_body> res{http::status::bad_request, m_request.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, "text/html");
+                res.keep_alive(m_request.keep_alive());
+                res.body() = std::move(why);
+                res.prepare_payload();
 
-            std::cerr << "Not found: " << target << std::endl;
+                return std::move(res);
+            }
 
-            http::response<http::string_body> res{http::status::not_found, m_request.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(m_request.keep_alive());
-            res.body() = "The resource '" + target + "' was not found.";
-            res.prepare_payload();
+            Response<boost::beast::http::string_body> not_found(std::string target)
+            {
+                namespace http = boost::beast::http;
 
-            return std::move(res);
-        }
+                m_logger.error("Not found: ", target);
 
-        Response<boost::beast::http::string_body> server_error(std::string what)
-        {
-            namespace http = boost::beast::http;
+                http::response<http::string_body> res{http::status::not_found, m_request.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, "text/html");
+                res.keep_alive(m_request.keep_alive());
+                res.body() = "The resource '" + target + "' was not found.";
+                res.prepare_payload();
 
-            std::cerr << "Server error: " << what << std::endl;
+                return std::move(res);
+            }
 
-            http::response<http::string_body> res{http::status::internal_server_error, m_request.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(m_request.keep_alive());
-            res.body() = "An error occurred: '" + what + "'";
-            res.prepare_payload();
+            Response<boost::beast::http::string_body> server_error(std::string what)
+            {
+                namespace http = boost::beast::http;
 
-            return std::move(res);
-        }
-    
-        Response<boost::beast::http::empty_body> success()
-        {
-            namespace http = boost::beast::http;
-            
-            std::cerr << "Ok" << std::endl;
-            
-            http::response<http::empty_body> res{http::status::ok, m_request.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.content_length(0);
-            res.keep_alive(m_request.keep_alive());
-            
-            return std::move(res);
-        }
+                m_logger.error("Server error: ", what);
 
-        Response<boost::beast::http::string_body> text_response(std::string text)
-        {
-            namespace http = boost::beast::http;
+                http::response<http::string_body> res{http::status::internal_server_error, m_request.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, "text/html");
+                res.keep_alive(m_request.keep_alive());
+                res.body() = "An error occurred: '" + what + "'";
+                res.prepare_payload();
 
-            std::cerr << "Ok" << std::endl;
-
-            http::response<http::string_body> res{http::status::ok, m_request.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(m_request.keep_alive());
-            res.body() = text;
-            res.prepare_payload();
-
-            return std::move(res);
-        }
-
-        Response<FileBody> file_response(FileBody &&body, std::string mime_type)
-        {
-            namespace http = boost::beast::http;
-            
-            std::cerr << "File <" << mime_type << ">" << std::endl;
-
-            Response<FileBody> res{
-                std::piecewise_construct,
-                std::make_tuple(std::move(body)),
-                std::make_tuple(http::status::ok, m_request.version())};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, mime_type);
-            res.content_length(res.body().size());
-            res.keep_alive(m_request.keep_alive());
-
-            return std::move(m_request);
-        }
-
-        Request(
-            RequestType &&request,
-            boost::beast::ssl_stream<boost::beast::tcp_stream> &stream,
-            bool &close,
-            boost::beast::error_code &ec,
-            boost::asio::yield_context yield)
-            : m_request(std::move(request))
-            , m_stream(stream)
-            , m_close(close)
-            , m_ec(ec)
-            , m_yield(yield)
-        {
-        }
-    
-        Request(const Request &) = delete;
-        Request &operator =(const Request &) = delete;
+                return std::move(res);
+            }
         
-        template<bool IsRequest, typename ResponseBody, typename Fields>
-        void
-        send(boost::beast::http::message<IsRequest, ResponseBody, Fields>&& msg)
-        {
-            m_close = msg.need_eof();
+            Response<boost::beast::http::empty_body> success()
+            {
+                namespace http = boost::beast::http;
+                
+                m_logger.info("Ok");
+                
+                http::response<http::empty_body> res{http::status::ok, m_request.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, "text/html");
+                res.content_length(0);
+                res.keep_alive(m_request.keep_alive());
+                
+                return std::move(res);
+            }
 
-            boost::beast::http::serializer<IsRequest, ResponseBody, Fields> s{msg};
-            boost::beast::http::async_write(m_stream, s, m_yield[m_ec]);
-        }
+            Response<boost::beast::http::string_body> text_response(std::string text)
+            {
+                namespace http = boost::beast::http;
 
-        RequestType &request() { return m_request; }
-        RequestType *operator->() { return &m_request; }
-        RequestType &operator*() { return m_request; }
+                m_logger.info("Ok");
 
-        auto operator[](auto &&arg) const { return m_request[std::forward<decltype(arg)>(arg)]; }
+                http::response<http::string_body> res{http::status::ok, m_request.version()};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, "text/html");
+                res.keep_alive(m_request.keep_alive());
+                res.body() = text;
+                res.prepare_payload();
 
-    private:
-        RequestType m_request;
-        boost::beast::ssl_stream<boost::beast::tcp_stream> &m_stream;
-        bool &m_close;
-        boost::beast::error_code &m_ec;
-        boost::asio::yield_context m_yield;
+                return std::move(res);
+            }
+
+            Response<FileBody> file_response(FileBody &&body, std::string mime_type)
+            {
+                namespace http = boost::beast::http;
+                
+                m_logger.info("Ok: File <", mime_type, ">");
+
+                Response<FileBody> res{
+                    std::piecewise_construct,
+                    std::make_tuple(std::move(body)),
+                    std::make_tuple(http::status::ok, m_request.version())};
+                res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+                res.set(http::field::content_type, mime_type);
+                res.content_length(res.body().size());
+                res.keep_alive(m_request.keep_alive());
+
+                return std::move(m_request);
+            }
+
+            Request(
+                RequestType &&request,
+                LoggerType &logger,
+                boost::beast::ssl_stream<boost::beast::tcp_stream> &stream,
+                bool &close,
+                boost::beast::error_code &ec,
+                boost::asio::yield_context yield)
+                : m_request(std::move(request))
+                , m_logger(logger)
+                , m_stream(stream)
+                , m_close(close)
+                , m_ec(ec)
+                , m_yield(yield)
+            {
+            }
+        
+            Request(const Request &) = delete;
+            Request &operator =(const Request &) = delete;
+            
+            template<bool IsRequest, typename ResponseBody, typename Fields>
+            void
+            send(boost::beast::http::message<IsRequest, ResponseBody, Fields>&& msg)
+            {
+                m_close = msg.need_eof();
+
+                boost::beast::http::serializer<IsRequest, ResponseBody, Fields> s{msg};
+                boost::beast::http::async_write(m_stream, s, m_yield[m_ec]);
+            }
+
+            RequestType &request() { return m_request; }
+            RequestType *operator->() { return &m_request; }
+            RequestType &operator*() { return m_request; }
+
+            auto operator[](auto &&arg) const { return m_request[std::forward<decltype(arg)>(arg)]; }
+
+        private:
+            RequestType m_request;
+            LoggerType &m_logger;
+            boost::beast::ssl_stream<boost::beast::tcp_stream> &m_stream;
+            bool &m_close;
+            boost::beast::error_code &m_ec;
+            boost::asio::yield_context m_yield;
+        };
     };
 
 
-    using StringRequest = Request<
+    using StringRequests = RequestFactory<
         boost::beast::http::request<
             boost::beast::http::string_body>>;
 
-    using DynamicRequest = Request<
+    using DynamicRequests = RequestFactory<
         boost::beast::http::request<
             boost::beast::http::dynamic_body>>;
 

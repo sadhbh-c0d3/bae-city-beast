@@ -40,13 +40,19 @@
 
 namespace bae::city::beast {
 
-    template <RequestConcept _Request, ServerConcept<_Request> _Server>
+    template <
+        LoggerConcept _LoggerType,
+        RequestFactoryConcept<_LoggerType> _RequestFactory,
+        ServerConcept<typename _RequestFactory::Request<_LoggerType>> _Server>
     struct Service
     {
         using Server = _Server;
-        using RequestType = _Request;
+        using LoggerType = _LoggerType;
+        using RequestType = typename _RequestFactory::Request<LoggerType>;
 
-        Service(Server &server): m_server(server) {}
+        Service(LoggerType &logger, Server &server)
+            : m_logger(logger)
+            , m_server(server) {}
 
         Service(const Service &) = delete;
         Service &operator =(const Service &) = delete;
@@ -59,7 +65,7 @@ namespace bae::city::beast {
 
             config.configure(ctx);
 
-            std::cerr << "Listening on " << config.address() << ":" << config.port() << std::endl;
+            m_logger.info("Listening on ", config.address(), ":", config.port());
 
             boost::asio::spawn(
                 ioc, [this, &ioc, &ctx, &config](auto &&arg)
@@ -83,6 +89,7 @@ namespace bae::city::beast {
         }
 
     private:
+        LoggerType &m_logger;
         Server &m_server;
 
         void
@@ -168,7 +175,7 @@ namespace bae::city::beast {
                     return fail(ec, "read");
                 
                 // Send the response
-                RequestType request{std::move(req), stream, close, ec, yield};
+                RequestType request{std::move(req), m_logger, stream, close, ec, yield};
                 m_server(request);
 
                 if(ec)
@@ -198,7 +205,7 @@ namespace bae::city::beast {
             if (ec == boost::asio::ssl::error::stream_truncated)
                 return;
 
-            std::cerr << what << ": " << ec.message() << "\n";
+            m_logger.error(what, ": ", ec.message());
         }
     };
 

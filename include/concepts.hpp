@@ -52,6 +52,13 @@ namespace bae::city::beast {
         };
 
     template<typename T>
+    concept LoggerConcept =
+        requires(T x) {
+            { x.info(std::declval<std::string>()) };
+            { x.error(std::declval<std::string>()) };
+        };
+
+    template<typename T>
     concept RequestConcept = 
         requires(T x) {
             // should define type aliases
@@ -73,6 +80,13 @@ namespace bae::city::beast {
             { (*x).target() } -> auto;
             // and shorthand for underlying operator []
             { x[std::declval<std::string>()] } -> auto;
+        };
+
+    template<typename T, typename L>
+    concept RequestFactoryConcept =
+        requires(T x) {
+            // should produce type implementing RequestConcept
+            RequestConcept<typename T::Request<L>>;
         };
     
     template<typename T, typename R>
