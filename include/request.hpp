@@ -40,23 +40,14 @@
 
 namespace bae::city::beast {
 
-    template<typename> struct BufferTypeTrait
-    {};
-
-    template <>
-    struct BufferTypeTrait <
-        boost::beast::http::request<
-            boost::beast::http::string_body>>
+    template <typename _RequestType>
+    struct BufferTypeTrait
     {
-        using BufferType = boost::beast::flat_buffer;
-    };
-
-    template <>
-    struct BufferTypeTrait <
-        boost::beast::http::request<
-            boost::beast::http::dynamic_body>>
-    {
-        using BufferType = boost::beast::multi_buffer;
+        using BufferType = std::conditional_t<
+            std::is_same_v<_RequestType, boost::beast::http::request<
+                                             boost::beast::http::dynamic_body>>,
+            boost::beast::multi_buffer,
+            boost::beast::flat_buffer>;
     };
 
     template <typename _RequestType>
