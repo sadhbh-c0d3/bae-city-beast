@@ -25,7 +25,10 @@ and then HTTPS service can be started in following way:
     bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
     
     MyServer server{document_root};
-    bae::city::beast::Service<MyServer> service{server};
+    bae::city::beast::Service<
+        bae::city::beast::DynamicRequest, MyServer> service{server};
+    
+    return service(config);
 ```
 
 ### No Smart Pointers
