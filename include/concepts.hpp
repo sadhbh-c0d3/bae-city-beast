@@ -85,6 +85,7 @@ namespace bae::city::beast {
     template<typename T, typename L>
     concept RequestFactoryConcept =
         requires(T x) {
+            LoggerConcept<L>;
             // should produce type implementing RequestConcept
             RequestConcept<typename T::Request<L>>;
         };
