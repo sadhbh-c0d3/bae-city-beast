@@ -30,7 +30,7 @@ and then HTTPS service can be started in following way:
 
 ### No Smart Pointers
 
-Note that all objects in the example above are created on stack. No need to user smart pointers.
+Note that all objects in the example above are created on stack. No need to use smart pointers.
 
 Also, **note** that use of smart pointers would defeat the idea of static (compile-time) polymorphism.
 
