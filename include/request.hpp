@@ -170,6 +170,9 @@ namespace bae::city::beast {
             , m_yield(yield)
         {
         }
+    
+        Request(const Request &) = delete;
+        Request &operator =(const Request &) = delete;
         
         template<bool IsRequest, typename ResponseBody, typename Fields>
         void

@@ -21,12 +21,12 @@ User needs to define two classes:
 
 and then HTTPS service can be started in following way:
 ```
-    MySecurity security;
-    bae::city::beast::SecureConfig<MySecurity> config{security, address, port, thread_count};
-    
-    MyServer server{document_root};
-    bae::city::beast::Service<
-        bae::city::beast::DynamicRequest, MyServer> service{server};
+    auto security = MySecurity{};
+    auto config = bae::city::beast::SecureConfig<MySecurity>{security, address, port, thread_count};
+
+    auto server = MyServer{document_root};
+    auto service = bae::city::beast::Service<
+        bae::city::beast::DynamicRequest, MyServer>{server};
     
     return service(config);
 ```

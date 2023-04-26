@@ -48,6 +48,9 @@ namespace bae::city::beast {
 
         Service(Server &server): m_server(server) {}
 
+        Service(const Service &) = delete;
+        Service &operator =(const Service &) = delete;
+
         template<ServiceConfigConcept _ServiceConfig>
         int operator()(_ServiceConfig &&config)
         {

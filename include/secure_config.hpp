@@ -45,6 +45,9 @@ namespace bae::city::beast {
             : ServiceConfig(std::forward<A>(a)...)
             , m_loader(loader) {}
 
+        SecureConfig(const SecureConfig &) = delete;
+        SecureConfig &operator =(const SecureConfig &) = delete;
+
         void configure(Context &context)
         {
             m_loader.load();
